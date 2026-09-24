@@ -21,7 +21,6 @@ public class Database {
                 type TEXT NOT NULL CHECK(type IN ('INCOME','EXPENSE'))
             )
             """;
-
         String transactions = """
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +33,6 @@ public class Database {
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             )
             """;
-
         String budgets = """
             CREATE TABLE IF NOT EXISTS budgets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +43,6 @@ public class Database {
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             )
             """;
-
         String settings = """
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -59,9 +56,8 @@ public class Database {
             stmt.execute(transactions);
             stmt.execute(budgets);
             stmt.execute(settings);
-            System.out.println("Database initialized.");
         } catch (SQLException e) {
-            System.err.println("Failed to initialize database: " + e.getMessage());
+            System.err.println("DB init failed: " + e.getMessage());
         }
     }
 }

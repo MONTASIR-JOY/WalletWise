@@ -12,13 +12,9 @@ public class Transaction {
     private String note;
     private String receiptPath;
 
-    public Transaction(int id,
-                       double amount,
-                       TransactionType type,
-                       Category category,
-                       LocalDate date,
-                       String note,
-                       String receiptPath) {
+    public Transaction(int id, double amount, TransactionType type,
+                       Category category, LocalDate date,
+                       String note, String receiptPath) {
         this.id = id;
         this.amount = amount;
         this.type = type;
@@ -28,68 +24,30 @@ public class Transaction {
         this.receiptPath = receiptPath;
     }
 
-    public Transaction(double amount,
-                       TransactionType type,
-                       Category category,
-                       LocalDate date,
-                       String note,
-                       String receiptPath) {
+    public Transaction(double amount, TransactionType type,
+                       Category category, LocalDate date,
+                       String note, String receiptPath) {
         this(0, amount, type, category, date, note, receiptPath);
     }
 
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
 
-    public double getAmount() {
-        return amount;
-    }
+    public TransactionType getType() { return type; }
+    public void setType(TransactionType type) { this.type = type; }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
-    public TransactionType getType() {
-        return type;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
-    public void setType(TransactionType type) {
-        this.type = type;
-    }
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public String getReceiptPath() {
-        return receiptPath;
-    }
-
-    public void setReceiptPath(String receiptPath) {
-        this.receiptPath = receiptPath;
-    }
+    public String getReceiptPath() { return receiptPath; }
+    public void setReceiptPath(String receiptPath) { this.receiptPath = receiptPath; }
 }
