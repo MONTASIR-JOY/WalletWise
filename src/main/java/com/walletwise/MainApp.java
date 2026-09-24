@@ -1,9 +1,11 @@
 package com.walletwise;
 
 import com.walletwise.dao.Database;
+import com.walletwise.util.PinService;
 import com.walletwise.util.SceneRouter;
 import com.walletwise.view.BudgetScene;
 import com.walletwise.view.DashboardScene;
+import com.walletwise.view.PinLockScene;
 import com.walletwise.view.SettingsScene;
 import com.walletwise.view.TransactionListScene;
 
@@ -18,11 +20,33 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application {
 
+    private BorderPane root;
+    private Stage stage;
+
     @Override
     public void start(Stage stage) {
+        this.stage = stage;
         Database.initialize();
 
-        BorderPane root = new BorderPane();
+        stage.setTitle("WalletWise");
+
+        if (PinService.isEnabled()) {
+            showLock();
+        } else {
+            showMain();
+        }
+
+        stage.show();
+    }
+
+    private void showLock() {
+        PinLockScene lock = new PinLockScene(this::showMain);
+        Scene scene = new Scene(lock.getRoot(), 800, 600);
+        stage.setScene(scene);
+    }
+
+    private void showMain() {
+        root = new BorderPane();
         SceneRouter.setRoot(root);
 
         DashboardScene dashboard = new DashboardScene();
@@ -55,9 +79,8 @@ public class MainApp extends Application {
         root.setBottom(nav);
         SceneRouter.show(dashboard.getRoot());
 
-        stage.setTitle("WalletWise");
-        stage.setScene(new Scene(root, 800, 600));
-        stage.show();
+        Scene scene = new Scene(root, 800, 600);
+        stage.setScene(scene);
     }
 
     public static void main(String[] args) {
