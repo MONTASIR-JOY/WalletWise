@@ -3,6 +3,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
+*.db
+receipts/
+config.properties
+.idea/
+*.iml
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
