@@ -4,9 +4,14 @@ import com.walletwise.dao.Database;
 import com.walletwise.util.CurrencyService;
 import com.walletwise.util.PinService;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -23,29 +28,26 @@ public class SettingsScene {
         Label title = new Label("Settings");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        // --- currency section ---
         currencyBox.getItems().addAll("BDT", "USD", "EUR", "GBP", "INR", "JPY");
-        currencyBox.setValue(loadSetting("currency", "BDT"));
+        currencyBox.setValue(readSetting("currency", "BDT"));
         currencyBox.setPrefWidth(120);
 
         Button testBtn = new Button("Test Rate");
-        testBtn.setOnAction(e -> testRate());
+        testBtn.setOnAction(e -> testRateAsync());
 
         Button saveBtn = new Button("Save");
         saveBtn.setOnAction(e -> {
-            saveSetting("currency", currencyBox.getValue());
-            alert(Alert.AlertType.INFORMATION, "Saved", "Currency set to " + currencyBox.getValue());
+            writeSetting("currency", currencyBox.getValue());
+            alert("Saved. Currency set to " + currencyBox.getValue());
         });
 
-        HBox row = new HBox(10,
-                new Label("Display currency:"), currencyBox, testBtn, saveBtn);
+        HBox row = new HBox(10, new Label("Display currency:"), currencyBox, testBtn, saveBtn);
         row.setAlignment(Pos.CENTER_LEFT);
 
         rateLabel.setStyle("-fx-text-fill: #555;");
 
-        // --- pin section ---
-        Label pinTitle = new Label("Security");
-        pinTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 15 0 0 0;");
+        Label secTitle = new Label("Security");
+        secTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 15 0 0 0;");
 
         Label pinStatus = new Label();
         refreshPinStatus(pinStatus);
@@ -66,9 +68,22 @@ public class SettingsScene {
         HBox pinRow = new HBox(10, enableBtn, changeBtn, disableBtn);
         pinRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(20, title, row, rateLabel, pinTitle, pinStatus, pinRow);
+        VBox root = new VBox(20, title, row, rateLabel, secTitle, pinStatus, pinRow);
         root.setPadding(new Insets(25));
         return root;
+    }
+
+    private void testRateAsync() {
+        String target = currencyBox.getValue();
+        rateLabel.setText("Fetching...");
+
+        CurrencyService.getRateAsync(
+                target,
+                rate -> Platform.runLater(() ->
+                        rateLabel.setText(String.format("1 BDT = %.6f %s", rate, target))),
+                err -> Platform.runLater(() ->
+                        rateLabel.setText("Failed: " + err))
+        );
     }
 
     private void refreshPinStatus(Label lbl) {
@@ -88,7 +103,7 @@ public class SettingsScene {
             oldD.setContentText("PIN:");
             oldD.showAndWait().ifPresent(old -> {
                 if (!PinService.verify(old)) {
-                    alert(Alert.AlertType.ERROR, "Wrong PIN", "That PIN is incorrect.");
+                    alert("That PIN is incorrect.");
                     return;
                 }
                 promptForNewPin(statusLabel);
@@ -106,53 +121,46 @@ public class SettingsScene {
         d.showAndWait().ifPresent(pin -> {
             String p = pin.trim();
             if (p.length() < 4) {
-                alert(Alert.AlertType.ERROR, "Too short", "Use at least 4 characters.");
+                alert("Use at least 4 characters.");
                 return;
             }
             PinService.setPin(p);
             refreshPinStatus(statusLabel);
-            alert(Alert.AlertType.INFORMATION, "Saved", "PIN updated.");
+            alert("PIN updated.");
         });
     }
 
     private void disablePin(Label statusLabel) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Turn off PIN lock?", ButtonType.YES, ButtonType.NO);
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Turn off PIN lock?",
+                javafx.scene.control.ButtonType.YES, javafx.scene.control.ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.showAndWait().ifPresent(bt -> {
-            if (bt == ButtonType.YES) {
+            if (bt == javafx.scene.control.ButtonType.YES) {
                 PinService.removePin();
                 refreshPinStatus(statusLabel);
             }
         });
     }
 
-    private void testRate() {
-        String target = currencyBox.getValue();
-        rateLabel.setText("Fetching...");
-        try {
-            double rate = CurrencyService.getRate(target);
-            rateLabel.setText(String.format("1 BDT = %.6f %s", rate, target));
-        } catch (Exception e) {
-            rateLabel.setText("Failed: " + e.getMessage());
-        }
-    }
-
-    private String loadSetting(String key, String fallback) {
+    private String readSetting(String key, String fallback) {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(
                      "SELECT value FROM settings WHERE key = ?")) {
             ps.setString(1, key);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getString("value");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String v = rs.getString("value");
+                rs.close();
+                return v;
             }
+            rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return fallback;
     }
 
-    private void saveSetting(String key, String value) {
+    private void writeSetting(String key, String value) {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO settings(key, value) VALUES(?, ?) " +
@@ -165,9 +173,9 @@ public class SettingsScene {
         }
     }
 
-    private void alert(Alert.AlertType type, String header, String msg) {
-        Alert a = new Alert(type);
-        a.setHeaderText(header);
+    private void alert(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
         a.setContentText(msg);
         a.showAndWait();
     }

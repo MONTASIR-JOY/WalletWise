@@ -20,7 +20,6 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application {
 
-    private BorderPane root;
     private Stage stage;
 
     @Override
@@ -42,11 +41,12 @@ public class MainApp extends Application {
     private void showLock() {
         PinLockScene lock = new PinLockScene(this::showMain);
         Scene scene = new Scene(lock.getRoot(), 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/walletwise.css").toExternalForm());
         stage.setScene(scene);
     }
 
     private void showMain() {
-        root = new BorderPane();
+        BorderPane root = new BorderPane();
         SceneRouter.setRoot(root);
 
         DashboardScene dashboard = new DashboardScene();
@@ -80,6 +80,7 @@ public class MainApp extends Application {
         SceneRouter.show(dashboard.getRoot());
 
         Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/walletwise.css").toExternalForm());
         stage.setScene(scene);
     }
 

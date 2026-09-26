@@ -7,6 +7,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class PinLockScene {
@@ -19,7 +21,7 @@ public class PinLockScene {
         this.onUnlock = onUnlock;
     }
 
-    public VBox getRoot() {
+    public StackPane getRoot() {
         Label title = new Label("WalletWise");
         title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold;");
 
@@ -36,9 +38,18 @@ public class PinLockScene {
 
         message.setStyle("-fx-text-fill: #c0392b;");
 
-        VBox root = new VBox(15, title, prompt, pinField, unlockBtn, message);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(40));
+        VBox box = new VBox(15, title, prompt, pinField, unlockBtn, message);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(40));
+
+        AnchorPane inner = new AnchorPane();
+        inner.getChildren().add(box);
+        AnchorPane.setTopAnchor(box, 0.0);
+        AnchorPane.setBottomAnchor(box, 0.0);
+        AnchorPane.setLeftAnchor(box, 0.0);
+        AnchorPane.setRightAnchor(box, 0.0);
+
+        StackPane root = new StackPane(inner);
         return root;
     }
 

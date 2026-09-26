@@ -18,14 +18,15 @@ public class Database {
             CREATE TABLE IF NOT EXISTS categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
-                type TEXT NOT NULL CHECK(type IN ('INCOME','EXPENSE'))
+                type TEXT NOT NULL
             )
             """;
+
         String transactions = """
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 amount REAL NOT NULL,
-                type TEXT NOT NULL CHECK(type IN ('INCOME','EXPENSE')),
+                type TEXT NOT NULL,
                 category_id INTEGER NOT NULL,
                 date TEXT NOT NULL,
                 note TEXT,
@@ -33,6 +34,7 @@ public class Database {
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             )
             """;
+
         String budgets = """
             CREATE TABLE IF NOT EXISTS budgets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,6 +45,7 @@ public class Database {
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             )
             """;
+
         String settings = """
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -50,14 +53,13 @@ public class Database {
             )
             """;
 
-        try (Connection conn = connect();
-             Statement stmt = conn.createStatement()) {
+        try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             stmt.execute(categories);
             stmt.execute(transactions);
             stmt.execute(budgets);
             stmt.execute(settings);
         } catch (SQLException e) {
-            System.err.println("DB init failed: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

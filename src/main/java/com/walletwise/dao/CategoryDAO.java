@@ -3,7 +3,11 @@ package com.walletwise.dao;
 import com.walletwise.model.Category;
 import com.walletwise.model.TransactionType;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +20,11 @@ public class CategoryDAO {
             ps.setString(1, c.getName());
             ps.setString(2, c.getType().name());
             ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) c.setId(keys.getInt(1));
+            ResultSet keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                c.setId(keys.getInt(1));
             }
+            keys.close();
         }
         return c;
     }
@@ -29,7 +35,9 @@ public class CategoryDAO {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+            while (rs.next()) {
+                list.add(map(rs));
+            }
         }
         return list;
     }
@@ -40,9 +48,11 @@ public class CategoryDAO {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, type.name());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(map(rs));
             }
+            rs.close();
         }
         return list;
     }
@@ -52,9 +62,13 @@ public class CategoryDAO {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return map(rs);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Category c = map(rs);
+                rs.close();
+                return c;
             }
+            rs.close();
         }
         return null;
     }

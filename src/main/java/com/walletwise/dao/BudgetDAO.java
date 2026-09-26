@@ -4,7 +4,10 @@ import com.walletwise.model.Budget;
 import com.walletwise.model.Category;
 import com.walletwise.model.TransactionType;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +31,11 @@ public class BudgetDAO {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, month);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(map(rs));
             }
+            rs.close();
         }
         return list;
     }
@@ -41,9 +46,13 @@ public class BudgetDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, categoryId);
             ps.setString(2, month);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return map(rs);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Budget b = map(rs);
+                rs.close();
+                return b;
             }
+            rs.close();
         }
         return null;
     }

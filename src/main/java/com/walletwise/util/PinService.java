@@ -12,7 +12,7 @@ import java.util.Base64;
 public class PinService {
 
     public static boolean isEnabled() {
-        return getStoredHash() != null;
+        return getStored() != null;
     }
 
     public static void setPin(String pin) {
@@ -30,18 +30,24 @@ public class PinService {
     }
 
     public static boolean verify(String pin) {
-        String stored = getStoredHash();
-        if (stored == null) return true;
+        String stored = getStored();
+        if (stored == null) {
+            return true;
+        }
         return stored.equals(hash(pin));
     }
 
-    private static String getStoredHash() {
+    private static String getStored() {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(
                      "SELECT value FROM settings WHERE key = 'pin_hash'")) {
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getString("value");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String v = rs.getString("value");
+                rs.close();
+                return v;
             }
+            rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,7 +73,7 @@ public class PinService {
             byte[] digest = md.digest(pin.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(digest);
         } catch (Exception e) {
-            throw new RuntimeException("Hash failed", e);
+            throw new RuntimeException(e);
         }
     }
 }

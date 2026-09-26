@@ -1,0 +1,67 @@
+.root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f5f6f8;
+}
+
+.label {
+    -fx-text-fill: #2c3e50;
+}
+
+.button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d4d9;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 14 6 14;
+    -fx-text-fill: #2c3e50;
+}
+
+.button:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+.button:pressed {
+    -fx-background-color: #dfe4e8;
+}
+
+.text-field, .password-field, .combo-box, .date-picker {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d4d9;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.table-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d4d9;
+    -fx-border-radius: 6;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #ecf0f1;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #d0d4d9 transparent;
+    -fx-padding: 8 5 8 5;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+}
+
+.progress-bar {
+    -fx-pref-height: 16;
+}
+
+.progress-bar > .bar {
+    -fx-background-radius: 8;
+}
+
+.progress-bar > .track {
+    -fx-background-radius: 8;
+    -fx-background-color: #ecf0f1;
+}

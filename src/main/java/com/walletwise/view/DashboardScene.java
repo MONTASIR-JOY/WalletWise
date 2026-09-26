@@ -3,16 +3,19 @@ package com.walletwise.view;
 import com.walletwise.dao.BudgetDAO;
 import com.walletwise.dao.Database;
 import com.walletwise.dao.TransactionDAO;
+import com.walletwise.model.AccountItem;
 import com.walletwise.model.Budget;
-import com.walletwise.model.Transaction;
 import com.walletwise.model.TransactionType;
 import com.walletwise.util.CurrencyService;
+import com.walletwise.util.Notifiable;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.sql.Connection;
@@ -23,14 +26,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DashboardScene {
+public class DashboardScene implements Notifiable {
 
     private final TransactionDAO txDAO = new TransactionDAO();
     private final BudgetDAO budgetDAO = new BudgetDAO();
 
-    private String currency = "BDT";
-    private double rate = 1.0;
-    private String rateError = null;
+    @Override
+    public void notify(String message) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        a.showAndWait();
+    }
 
     public VBox getRoot() {
         Label title = new Label("Dashboard");
@@ -40,15 +47,15 @@ public class DashboardScene {
         Label monthLabel = new Label(month);
         monthLabel.setStyle("-fx-text-fill: #777;");
 
-        // read currency from settings
-        currency = loadSetting("currency", "BDT");
+        String currency = readSetting("currency", "BDT");
+        double rate = 1.0;
+        String rateError = null;
 
         if (!currency.equals("BDT")) {
             try {
                 rate = CurrencyService.getRate(currency);
             } catch (Exception e) {
                 rateError = e.getMessage();
-                rate = 1.0;
             }
         }
 
@@ -57,9 +64,9 @@ public class DashboardScene {
         Map<String, Double> spent = new HashMap<>();
 
         try {
-            List<Transaction> txs = txDAO.findByMonth(month);
-            for (int i = 0; i < txs.size(); i++) {
-                Transaction t = txs.get(i);
+            List<AccountItem> items = txDAO.findByMonth(month);
+            for (int i = 0; i < items.size(); i++) {
+                AccountItem t = items.get(i);
                 if (t.getType() == TransactionType.INCOME) {
                     income = income + t.getAmount();
                 } else {
@@ -75,27 +82,29 @@ public class DashboardScene {
 
         double balance = income - expense;
 
-        // convert if needed
-        double shownIncome = income * rate;
-        double shownExpense = expense * rate;
-        double shownBalance = balance * rate;
-
         HBox cards = new HBox(15);
         cards.setAlignment(Pos.CENTER_LEFT);
-        cards.getChildren().add(makeCard("Income", shownIncome, "#27ae60"));
-        cards.getChildren().add(makeCard("Expense", shownExpense, "#c0392b"));
-        cards.getChildren().add(makeCard("Balance", shownBalance, shownBalance >= 0 ? "#2980b9" : "#c0392b"));
+        VBox incomeCard = makeCard("Income", income * rate, "#27ae60");
+        VBox expenseCard = makeCard("Expense", expense * rate, "#c0392b");
+        VBox balanceCard = makeCard("Balance", balance * rate, balance >= 0 ? "#2980b9" : "#c0392b");
+        cards.getChildren().addAll(incomeCard, expenseCard, balanceCard);
 
-        Label currencyNote = new Label();
+        // responsive: each card is 28% of the container's width
+        incomeCard.prefWidthProperty().bind(cards.widthProperty().multiply(0.28));
+        expenseCard.prefWidthProperty().bind(cards.widthProperty().multiply(0.28));
+        balanceCard.prefWidthProperty().bind(cards.widthProperty().multiply(0.28));
+
+        Label note = new Label();
         if (currency.equals("BDT")) {
-            currencyNote.setText("Amounts in BDT");
+            note.setText("Amounts in BDT");
+            note.setStyle("-fx-text-fill: #777; -fx-font-size: 11px;");
         } else if (rateError != null) {
-            currencyNote.setText("Could not fetch " + currency + " rate (" + rateError + ")");
-            currencyNote.setStyle("-fx-text-fill: #c0392b;");
+            note.setText("Could not fetch " + currency + " rate (" + rateError + ")");
+            note.setStyle("-fx-text-fill: #c0392b; -fx-font-size: 11px;");
         } else {
-            currencyNote.setText(String.format("Converted to %s  (1 BDT = %.6f)", currency, rate));
+            note.setText(String.format("Converted to %s  (1 BDT = %.6f)", currency, rate));
+            note.setStyle("-fx-text-fill: #777; -fx-font-size: 11px;");
         }
-        currencyNote.setStyle(currencyNote.getStyle() + "; -fx-text-fill: #777; -fx-font-size: 11px;");
 
         Label sectionTitle = new Label("Budget Progress");
         sectionTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
@@ -111,17 +120,18 @@ public class DashboardScene {
                 for (int i = 0; i < bs.size(); i++) {
                     Budget b = bs.get(i);
                     double used = spent.getOrDefault(b.getCategory().getName(), 0.0);
-                    budgetBox.getChildren().add(makeBudgetRow(b, used));
+                    budgetBox.getChildren().add(makeRow(b, used));
                 }
             }
-        } catch (Exception ex) {
-            budgetBox.getChildren().add(new Label("Could not load budgets."));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        VBox root = new VBox();
-        root.setSpacing(20);
+        VBox root = new VBox(20, title, monthLabel, cards, note, sectionTitle, budgetBox);
         root.setPadding(new Insets(25));
-        root.getChildren().addAll(title, monthLabel, cards, currencyNote, sectionTitle, budgetBox);
+
+        VBox.setVgrow(budgetBox, Priority.ALWAYS);
+
         return root;
     }
 
@@ -132,16 +142,14 @@ public class DashboardScene {
         Label amtLbl = new Label(String.format("%.2f", amount));
         amtLbl.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
 
-        VBox box = new VBox(6);
-        box.getChildren().addAll(nameLbl, amtLbl);
+        VBox box = new VBox(6, nameLbl, amtLbl);
         box.setPadding(new Insets(15));
-        box.setPrefWidth(200);
         box.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
                 "-fx-border-color: #e0e0e0; -fx-border-radius: 8;");
         return box;
     }
 
-    private HBox makeBudgetRow(Budget b, double used) {
+    private HBox makeRow(Budget b, double used) {
         Label catLabel = new Label(b.getCategory().getName());
         catLabel.setPrefWidth(120);
 
@@ -166,23 +174,26 @@ public class DashboardScene {
             bar.setStyle("-fx-accent: #27ae60;");
         }
 
-        Label detailLabel = new Label(String.format("%.0f / %.0f", used, b.getLimitAmount()));
-        detailLabel.setPrefWidth(120);
+        Label detail = new Label(String.format("%.0f / %.0f", used, b.getLimitAmount()));
+        detail.setPrefWidth(120);
 
-        HBox row = new HBox(10);
+        HBox row = new HBox(10, catLabel, bar, detail);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.getChildren().addAll(catLabel, bar, detailLabel);
         return row;
     }
 
-    private String loadSetting(String key, String fallback) {
+    private String readSetting(String key, String fallback) {
         try (Connection conn = Database.connect();
              PreparedStatement ps = conn.prepareStatement(
                      "SELECT value FROM settings WHERE key = ?")) {
             ps.setString(1, key);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getString("value");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String v = rs.getString("value");
+                rs.close();
+                return v;
             }
+            rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
