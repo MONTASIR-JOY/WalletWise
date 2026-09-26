@@ -1,0 +1,1 @@
+WalletWise is a JavaFX-based personal finance application that allows users to manage their income and expenses, categorize transactions, set monthly budgets, and track spending progress. It will store transaction data permanently using SQLite and support receipt photo attachments.
