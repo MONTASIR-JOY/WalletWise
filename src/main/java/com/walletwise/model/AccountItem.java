@@ -9,13 +9,15 @@ public abstract class AccountItem {
     private Category category;
     private LocalDate date;
     private String note;
+    private String receiptPath;
 
-    public AccountItem(int id, double amount, Category category, LocalDate date, String note) {
+    public AccountItem(int id, double amount, Category category, LocalDate date, String note, String receiptPath) {
         this.id = id;
         this.amount = amount;
         this.category = category;
         this.date = date;
         this.note = note;
+        this.receiptPath = receiptPath;
     }
 
     public abstract TransactionType getType();
@@ -60,5 +62,13 @@ public abstract class AccountItem {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getReceiptPath() {
+        return receiptPath;
+    }
+
+    public void setReceiptPath(String receiptPath) {
+        this.receiptPath = receiptPath;
     }
 }

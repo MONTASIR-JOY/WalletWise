@@ -26,7 +26,7 @@ public class TransactionDAO {
             ps.setInt(3, t.getCategory().getId());
             ps.setString(4, t.getDate().toString());
             ps.setString(5, t.getNote());
-            ps.setString(6, null);
+            ps.setString(6, t.getReceiptPath());
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
@@ -74,7 +74,7 @@ public class TransactionDAO {
             ps.setInt(3, t.getCategory().getId());
             ps.setString(4, t.getDate().toString());
             ps.setString(5, t.getNote());
-            ps.setString(6, null);
+            ps.setString(6, t.getReceiptPath());
             ps.setInt(7, t.getId());
             ps.executeUpdate();
         }
@@ -107,11 +107,12 @@ public class TransactionDAO {
         String typeStr = rs.getString("type");
         LocalDate date = LocalDate.parse(rs.getString("date"));
         String note = rs.getString("note");
+        String receipt = rs.getString("receipt_path");
 
         if (typeStr.equals("INCOME")) {
-            return new Income(id, amt, cat, date, note);
+            return new Income(id, amt, cat, date, note, receipt);
         } else {
-            return new Expense(id, amt, cat, date, note);
+            return new Expense(id, amt, cat, date, note, receipt);
         }
     }
 }
